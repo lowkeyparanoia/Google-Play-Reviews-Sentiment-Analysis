@@ -116,3 +116,52 @@ ax.set_title('App pricing trend across categories')
 # Apps whose Price is greater than 200
 apps_above_200 = apps[apps['Price'] > 200]
 apps_above_200[['Category', 'App', 'Price']]
+
+apps_under_100 = apps[apps.Price < 100]
+
+fig, ax = plt.subplots()
+fig.set_size_inches(15, 8)
+
+# Examine price vs category with the authentic apps (apps_under_100)
+ax = sns.stripplot(x = 'Price', y = 'Category', data = apps_under_100, jitter = True, linewidth = 1)
+ax.set_title('App pricing trend across categories after filtering for junk apps')
+
+trace0 = go.Box(
+    # Data for paid apps
+    y = apps[apps['Type'] == 'Paid']['Installs'],
+    name = 'Paid'
+)
+
+trace1 = go.Box(
+    # Data for free apps
+    y = apps[apps['Type'] == 'Unpaid']['Installs'],
+    name = 'Free'
+)
+
+layout = go.Layout(
+    title = "Number of downloads of paid apps vs. free apps",
+    yaxis = dict(title = "Log number of downloads",
+                type = 'log',
+                autorange = True)
+)
+
+# Add trace0 and trace1 to a list for plotting
+data = [trace0, trace1]
+plotly.offline.iplot({'data': data, 'layout': layout})
+
+# Load user_reviews.csv
+reviews_df = pd.read_csv("./datasets/user_reviews.csv")
+
+# Join the two dataframes
+merged_df = pd.merge(apps, reviews_df, on = "App", how = "inner")
+
+# Drop NA values from Sentiment and Review columns
+merged_df = merged_df.dropna(subset = ['Sentiment', 'Review'])
+
+sns.set_style('ticks')
+fig, ax = plt.subplots()
+fig.set_size_inches(11, 8)
+
+# User review sentiment polarity for paid vs. free apps
+ax = sns.boxplot(x = 'Type', y = 'Sentiment_Polarity', data = merged_df)
+ax.set_title('Sentiment Polarity Distribution')
